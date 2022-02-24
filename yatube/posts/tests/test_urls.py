@@ -73,12 +73,6 @@ class PostsURLTests(TestCase):
                     response.status_code, HTTPStatus.OK
                 )
 
-    def test_non_existent_page_is_not_found(self):
-        response = self.guest_client.get('nonexistent_page/')
-        self.assertEqual(
-            response.status_code, HTTPStatus.NOT_FOUND
-        )
-
     def test_urls_correct_template(self):
         """URL-адрес использует соответствующий шаблон."""
         template_url_names = {
@@ -105,11 +99,6 @@ class PostsURLTests(TestCase):
             with self.subTest(template=template):
                 response = self.authorized_client.get(address)
                 self.assertTemplateUsed(response, template)
-
-    def test_non_existent_page_correct_template(self):
-        template = 'core/404.html'
-        response = self.guest_client.get('nonexistent_page/')
-        self.assertTemplateUsed(response, template)
 
     def test_post_operation_urls_redirect_guest_on_login(self):
         """Редирект неавторизованного пользователя на страницу входа

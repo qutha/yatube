@@ -1,13 +1,14 @@
-import shutil
-import tempfile
 from datetime import timedelta
+import tempfile
+import shutil
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, Client, override_settings
 from django.urls import reverse
-from django.core.files.uploadedfile import SimpleUploadedFile
+
 from ..models import Comment, Group, Post
-from django.conf import settings
 
 User = get_user_model()
 TEMP_MEDIA_ROOT = tempfile.mkdtemp(dir=settings.BASE_DIR)
@@ -100,6 +101,7 @@ class PostFormCreateTest(TestCase):
         self.assertEqual(Post.objects.count(), posts_count + 1)
         self.assertEqual(latest_post.text, 'Пост с картинкой')
         self.assertEqual(latest_post.author.username, self.user.username)
+        self.assertEqual(latest_post.image, 'posts/image.gif')
 
     def test_edit_post(self):
         """Редактирование поста работает корректно."""

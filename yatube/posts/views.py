@@ -2,8 +2,8 @@ from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404, render, redirect
 
-from .forms import PostForm, CommentForm
-from .models import Group, Post, User, Follow
+from .forms import CommentForm, PostForm
+from .models import Follow, Group, Post, User
 
 POSTS_AMOUNT = 10
 
@@ -23,7 +23,10 @@ def index(request):
 @login_required
 def post_create(request):
     template_name = 'posts/create_post.html'
-    form = PostForm(request.POST or None)
+    form = PostForm(
+        request.POST or None,
+        files=request.FILES or None,
+    )
     if form.is_valid():
         form = form.save(commit=False)
         form.author = request.user
@@ -129,19 +132,12 @@ def profile(request, username):
     paginator = Paginator(post_list, POSTS_AMOUNT)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
-    following = False
-    if request.user.is_authenticated and Follow.objects.filter(
-            user=request.user, author=author
-    ).exists():
-        following = True
-    is_follow_btn_visible = False
-    if request.user.is_authenticated and request.user.username != username:
-        is_follow_btn_visible = False
+    following = request.user.is_authenticated and Follow.objects.filter(
+        user=request.user, author=author).exists()
     context = {
         'author': author,
         'page_obj': page_obj,
         'posts_amount': posts_amount,
         'following': following,
-        'is_follow_btn_visible': is_follow_btn_visible,
     }
     return render(request, template_name, context)

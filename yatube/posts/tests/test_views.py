@@ -240,15 +240,24 @@ class PostsPagesTests(TestCase):
         second_cache_index = cache.get(
             make_template_fragment_key('index_page', [page_obj.number])
         )
-        cache.clear()
-        response = self.authorized_client.get(reverse('posts:index'))
-        page_obj = response.context['page_obj']
-        third_cache_index = cache.get(
-            make_template_fragment_key('index_page', [page_obj.number])
-        )
         self.assertIn(post.text, first_cache_index)
         self.assertIn(post.text, second_cache_index)
-        self.assertNotIn(post.text, third_cache_index)
+
+    def test_cached_index_page_and_actual_index_page(self):
+        """Проверка поста кэшированной главной страницы и действительной"""
+        post = Post.objects.create(
+            text='Самый уникальный текст, который есть только в этом посте.',
+            author=self.user,
+        )
+        response = self.authorized_client.get(reverse('posts:index'))
+        page_obj = response.context['page_obj']
+        cache_index = cache.get(
+            make_template_fragment_key('index_page', [page_obj.number])
+        )
+        post.delete()
+        response = self.authorized_client.get(reverse('posts:index'))
+        self.assertIn(post.text, cache_index)
+        self.assertNotIn(post.text, response.context['page_obj'])
 
     def test_authorized_client_can_follow(self):
         """Авторизованный клиент может подписываться."""
@@ -289,9 +298,7 @@ class PostsPagesTests(TestCase):
         )
         new_unfollowed_post = Post.objects.create(
             author=self.user_without_followers,
-            text=(
-                'Этот пост противоречит взглядам автора сайта'
-            ),
+            text='Этот пост противоречит взглядам автора сайта',
         )
         response = self.authorized_client.get(
             reverse('posts:follow_index')
