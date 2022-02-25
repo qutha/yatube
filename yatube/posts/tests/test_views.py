@@ -9,7 +9,6 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db.models.fields.files import ImageFieldFile
 from django.test import TestCase, Client, override_settings
 from django.urls import reverse
-from django.core.cache.utils import make_template_fragment_key
 
 from ..forms import PostForm
 from ..models import Group, Post, Follow
@@ -250,7 +249,6 @@ class PostsPagesTests(TestCase):
         content_without_post = response.content.decode('utf-8')
         self.assertIn(post.text, content_with_post)
         self.assertNotIn(post.text, content_without_post)
-
 
     def test_authorized_client_can_follow(self):
         """Авторизованный клиент может подписываться."""
