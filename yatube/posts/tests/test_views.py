@@ -223,41 +223,34 @@ class PostsPagesTests(TestCase):
         posts = response.context.get('page_obj').object_list
         self.assertEqual(len(posts), 0)
 
-    def test_cache_on_index_page(self):
+    def test_caching_on_index_page(self):
         """Кэширование работает на главной странице"""
         post = Post.objects.create(
             text='Самый уникальный текст, который есть только в этом посте',
             author=self.user,
         )
         response = self.authorized_client.get(reverse('posts:index'))
-        page_obj = response.context['page_obj']
-        first_cache_index = cache.get(
-            make_template_fragment_key('index_page', [page_obj.number])
-        )
+        first_content = response.content.decode('utf-8')
         post.delete()
         response = self.authorized_client.get(reverse('posts:index'))
-        page_obj = response.context['page_obj']
-        second_cache_index = cache.get(
-            make_template_fragment_key('index_page', [page_obj.number])
-        )
-        self.assertIn(post.text, first_cache_index)
-        self.assertIn(post.text, second_cache_index)
+        second_content = response.content.decode('utf-8')
+        self.assertEqual(first_content, second_content)
 
-    def test_cached_index_page_and_actual_index_page(self):
-        """Проверка поста кэшированной главной страницы и действительной"""
+    def test_index_page_without_caching(self):
+        """Проверка главной страницы без кэширования"""
         post = Post.objects.create(
             text='Самый уникальный текст, который есть только в этом посте.',
             author=self.user,
         )
         response = self.authorized_client.get(reverse('posts:index'))
-        page_obj = response.context['page_obj']
-        cache_index = cache.get(
-            make_template_fragment_key('index_page', [page_obj.number])
-        )
+        content_with_post = response.content.decode('utf-8')
         post.delete()
+        cache.clear()
         response = self.authorized_client.get(reverse('posts:index'))
-        self.assertIn(post.text, cache_index)
-        self.assertNotIn(post.text, response.context['page_obj'])
+        content_without_post = response.content.decode('utf-8')
+        self.assertIn(post.text, content_with_post)
+        self.assertNotIn(post.text, content_without_post)
+
 
     def test_authorized_client_can_follow(self):
         """Авторизованный клиент может подписываться."""

@@ -112,7 +112,7 @@ def post_detail(request, post_id):
     post = get_object_or_404(Post, pk=post_id)
     posts_amount = Post.objects.filter(author=post.author).count()
     comments = post.comments.all()
-    comment_form = CommentForm(request.POST or None)
+    comment_form = CommentForm()
     context = {
         'author': post.author,
         'post': post,
